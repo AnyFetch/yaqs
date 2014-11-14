@@ -16,6 +16,8 @@
     "anyfetch"
   ],
   "dependencies": {
+    "async": "^0.9.0",
+    "rarity": "^2.1.1",
     "redis": "^0.12.1"
   },
   "optionalDependencies": {

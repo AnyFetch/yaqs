@@ -4,7 +4,8 @@
   "description": "Yet Another Queue System",
   "main": "lib/index.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha --recursive -R spec test/ -t 5000"
+    "test": "NODE_ENV=test mocha --recursive -R spec test/ -t 5000",
+    "lint": "jshint lib/ test/ && jscs lib/ test/"
   },
   "repository": {
     "type": "git",
@@ -16,14 +17,18 @@
     "anyfetch"
   ],
   "dependencies": {
+    "async": "^0.9.0",
+    "rarity": "^2.1.1",
     "redis": "^0.12.1"
   },
   "optionalDependencies": {
-    "hiredis": "^0.1.17",
+    "hiredis": "^0.1.17"
   },
   "devDependencies": {
     "mocha": "1.20.x",
-    "should": "4.0.x"
+    "should": "4.0.x",
+    "jshint": "^2.5.6",
+    "jscs": "^1.7.3"
   },
   "author": "Quentin Buathier <quentin.buathier@epitech.eu>",
   "license": "MIT",

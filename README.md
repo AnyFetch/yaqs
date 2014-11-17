@@ -32,7 +32,7 @@ You can use this client to create, use and remove queues.
 * `defaultPriority` (default=`client.PRIORITY.NORMAL`): Default priority when we create job without `priority` option
 * `defaultRetry` (default=`0`): Default number of retry before giving up on a job
 * `defaultRetryDelay` (default=`-1`): Default retry delay; values lower than 0 means direct retry.
-* `defaultTimeout` (default=`-1`): Default retry
+* `defaultTimeout` (default=`-1`): Default timeout
 
 #### Usage
 
@@ -59,7 +59,7 @@ var queue = client.createQueue(name, opts)
 * `timeoutOnStop` (default=`client.defaultTimeoutOnStop`): When stoppping the queue, maximum amount of time to wait before force-stopping workers. If the timeout is less than or equal to 0, no limit is enforced.
 * `defaultPriority` (default=`client.PRIORITY.NORMAL`): Default priority for new jobs
 * `defaultRetry` (default=0): Default retry for new jobs
-* `defaultRetryDelay` (default=-2): Default retry delay for new jobs
+* `defaultRetryDelay` (default=-1): Default retry delay for new jobs
 * `defaultTimeout` (default=-1): Default timeout for new jobs
 
 #### Usage

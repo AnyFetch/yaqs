@@ -28,11 +28,11 @@ You can use this client to create, use and remove queues.
     - `host` (default=`"localhost"`): Redis host
     - `pass` (default=`undefined`): Redis password
 * `defaultConcurrency` (default=`1`): Default concurrency
-* `defaultTimeoutOnStop` (default=`2000`): Default timeoutOnStop (timeout before force-killing a queue)
+* `defaultTimeoutOnStop` (default=`2000`): Default timeoutOnStop in ms (timeout before force-killing a queue)
 * `defaultPriority` (default=`client.PRIORITY.NORMAL`): Default priority when we create job without `priority` option
 * `defaultRetry` (default=`0`): Default number of retry before giving up on a job
-* `defaultRetryDelay` (default=`-1`): Default retry delay; values lower than 0 means direct retry.
-* `defaultTimeout` (default=`-1`): Default timeout
+* `defaultRetryDelay` (default=`-1`): Default retry delay in ms; values lower than 0 means direct retry.
+* `defaultTimeout` (default=`-1`): Default timeout in ms
 
 #### Usage
 
@@ -56,11 +56,11 @@ var queue = client.createQueue(name, opts)
 #### Options
 
 * `concurrency` (default=`client.defaultConcurrency`): Concurrency for this queue in this server
-* `timeoutOnStop` (default=`client.defaultTimeoutOnStop`): When stoppping the queue, maximum amount of time to wait before force-stopping workers. If the timeout is less than or equal to 0, no limit is enforced.
+* `timeoutOnStop` (default=`client.defaultTimeoutOnStop`): When stoppping the queue, maximum amount of time in ms to wait before force-stopping workers. If the timeout is less than or equal to 0, no limit is enforced.
 * `defaultPriority` (default=`client.PRIORITY.NORMAL`): Default priority for new jobs
 * `defaultRetry` (default=0): Default retry for new jobs
-* `defaultRetryDelay` (default=-1): Default retry delay for new jobs
-* `defaultTimeout` (default=-1): Default timeout for new jobs
+* `defaultRetryDelay` (default=-1): Default retry delay in ms for new jobs
+* `defaultTimeout` (default=-1): Default timeout in ms for new jobs
 
 #### Usage
 
@@ -124,7 +124,7 @@ var job = queue.createJob(data, opts)
 #### Options
 
 * `priority` (default:`queue.defaultPriority`): Priority for the job, greater is better. Use `client.PRIORITY` values (VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW)
-* `timeout` (default:`queue.defaultTimeout`): Timeout of the job. If the job is not finished after the timeout, it is considered finished (although the job is not killed, it is your responsability to ensure you're not leaking resources). If the timeout is less than or equal to 0, it is not taken into consideration. A `job.timeout` event is sent on the queue.
+* `timeout` (default:`queue.defaultTimeout`): Timeout of the job in ms. If the job is not finished after the timeout, it is considered finished (although the job is not killed, it is your responsability to ensure you're not leaking resources). If the timeout is less than or equal to 0, it is not taken into consideration. A `job.timeout` event is sent on the queue.
 * `retry` (default:`queue.defaultRetry`): number of retry to use if the worker returns an error.
 * `retryDelay` (default:`queue.defaultRetryDelay`): delay in ms between two retry
 

@@ -66,7 +66,8 @@
     "it",
     "after",
     "before",
-    "beforeEach"
+    "beforeEach",
+    "afterEach"
   ],
   "indent"        : 2,
   "maxstatements" : 60,

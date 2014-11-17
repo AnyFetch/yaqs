@@ -94,19 +94,19 @@ describe('Workflow', function() {
   describe('Priority', function() {
     it('should execute all jobs in priority order', function(done) {
       var jobs = [
-        {identifier: 'test-1', priority: -100},
-        {identifier: 'test-2', priority: 100},
-        {identifier: 'test-2', priority: 0},
-        {identifier: 'test-3', priority: -50},
-        {identifier: 'test-4', priority: 50},
-        {identifier: 'test-5', priority: -50},
-        {identifier: 'test-6', priority: 0},
-        {identifier: 'test-7', priority: 50},
-        {identifier: 'test-8', priority: -100},
-        {identifier: 'test-9', priority: 100}
+        {identifier: 'test-1', priority: client.PRIORITY.VERY_LOW},
+        {identifier: 'test-2', priority: client.PRIORITY.VERY_HIGH},
+        {identifier: 'test-2', priority: client.PRIORITY.NORMAL},
+        {identifier: 'test-3', priority: client.PRIORITY.LOW},
+        {identifier: 'test-4', priority: client.PRIORITY.HIGH},
+        {identifier: 'test-5', priority: client.PRIORITY.LOW},
+        {identifier: 'test-6', priority: client.PRIORITY.NORMAL},
+        {identifier: 'test-7', priority: client.PRIORITY.HIGH},
+        {identifier: 'test-8', priority: client.PRIORITY.VERY_LOW},
+        {identifier: 'test-9', priority: client.PRIORITY.VERY_HIGH}
       ];
 
-      var exceptedJobs = [
+      var expectedJobs = [
         'test-2', 'test-9', 'test-4', 'test-7', 'test-2', 'test-6', 'test-3', 'test-5', 'test-1', 'test-8'
       ];
 
@@ -114,7 +114,7 @@ describe('Workflow', function() {
 
       queue.on('empty', function() {
         executedJobs.should.have.lengthOf(jobs.length);
-        executedJobs.should.eql(exceptedJobs);
+        executedJobs.should.eql(expectedJobs);
         queue.remove(done);
       });
 

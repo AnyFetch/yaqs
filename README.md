@@ -103,8 +103,8 @@ queue.on('stop', function(queue) {});               // When we stop the queue
 queue.on('remove', function(queue) {});             // When we remove the queue
 queue.on('empty', function(queue) {});              // When a queue has no new jobs to process
 
-queue.on('job.completed', function(job, data) {});   // When a job is completed
-queue.on('job.failed', function(job, err) {});      // When a job failed
+queue.on('job.completed', function(job, data) {});   // When a job complet
+queue.on('job.failed', function(job, err) {});      // When a job fail
 queue.on('job.timeout', function(job) {});          // When a job timeout
 ```
 

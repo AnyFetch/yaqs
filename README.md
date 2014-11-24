@@ -44,13 +44,17 @@ client.PRIORITY;
 client.createQueue(name, opts);
 
 // Call queue.stop() on all queues
-client.stopAllQueues(function(err) {}) 
+client.stopAllQueues(function(err) {});
+
+// Get stats of all queues with this prefix in Redis
+// Stats for the queue 'test' are in stats.test
+client.stats(function(err, stats) {});
 ```
 
 ### Queue
 
 ```js
-var queue = client.createQueue(name, opts)
+var queue = client.createQueue(name, opts);
 ```
 
 #### Options
@@ -82,20 +86,26 @@ queue.stop(function(err) {});
 
 // Stop processing jobs and remove all jobs
 queue.remove(function(err) {});
+
+// Get stats for this queue
+// stats.pending = number of pending jobs
+// stats.processing = number of processing jobs
+// stats.total = total number of jobs added to this queue
+queue.stats(function(err, stats) {});
 ```
 
 #### Events
 
 ```js
-queue.on('error', function(err) {})                // When an error occured
-queue.on('start', function(queue) {})              // When we start the queue
-queue.on('stop', function(queue) {})               // When we stop the queue
-queue.on('remove', function(queue) {})             // When we remove the queue
-queue.on('empty', function(queue) {})              // When a queue has no new jobs to process
+queue.on('error', function(err) {});                // When an error occured
+queue.on('start', function(queue) {});              // When we start the queue
+queue.on('stop', function(queue) {});               // When we stop the queue
+queue.on('remove', function(queue) {});             // When we remove the queue
+queue.on('empty', function(queue) {});              // When a queue has no new jobs to process
 
-queue.on('job.complete', function(job, data) {})   // When a job is completed
-queue.on('job.failed', function(job, err) {})      // When a job fail
-queue.on('job.timeout', function(job) {})          // When a job timeout
+queue.on('job.complete', function(job, data) {});   // When a job is completed
+queue.on('job.failed', function(job, err) {});      // When a job fail
+queue.on('job.timeout', function(job) {});          // When a job timeout
 ```
 
 #### Example of worker function
@@ -118,7 +128,7 @@ queue.setWorker(workerFunction);
 ### Job
 
 ```js
-var job = queue.createJob(data, opts)
+var job = queue.createJob(data, opts);
 ```
 
 #### Options

@@ -8,10 +8,6 @@ var rarity = require('rarity');
 var client = require('../lib')();
 var Queue = require('../lib/queue');
 
-before(function flushRedis(cb) {
-  client.getConn('conn').flushdb(cb);
-});
-
 describe('Workflow', function() {
   var queue;
   beforeEach(function createQueue() {

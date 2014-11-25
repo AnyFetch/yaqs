@@ -144,4 +144,44 @@ describe('Workflow', function() {
       });
     });
   });
+
+  describe('TTL', function() {
+    it('should execute all jobs unexpired', function(done) {
+      var executedJobs = [];
+
+      queue.on('empty', function() {
+        executedJobs.should.have.lengthOf(3);
+        executedJobs.should.eql(['test-1', 'test-2', 'test-3']);
+        queue.remove(done);
+      });
+
+      queue.setWorker(function(job, cb) {
+        executedJobs.push(job.data.identifier);
+        return cb();
+      });
+
+      queue.on('error', done);
+
+      async.waterfall([
+        function addJobs(cb) {
+          async.eachSeries(['test-1', 'test-2', 'test-3'], function(identifier, cb) {
+            queue.createJob({identifier: identifier}).save(cb);
+          }, cb);
+        },
+        function addTTLJobs(cb) {
+          queue.createJob({identifier: 'test-4'}, {ttl: 1}).save(cb);
+        },
+        function startQueue(cb) {
+          queue.should.have.property('state', Queue.STOPPED);
+          queue.start(cb);
+        }
+      ], function(err) {
+        if(err) {
+          return done(err);
+        }
+
+        queue.should.have.property('state', Queue.STARTED);
+      });
+    });
+  });
 });

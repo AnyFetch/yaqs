@@ -71,5 +71,5 @@
   ],
   "indent"        : 2,
   "maxstatements" : 60,
-  "maxcomplexity" : 15
+  "maxcomplexity" : 20
 }

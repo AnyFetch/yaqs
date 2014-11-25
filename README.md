@@ -92,6 +92,9 @@ queue.remove(function(err) {});
 // stats.processing = number of processing jobs
 // stats.total = total number of jobs added to this queue
 queue.stats(function(err, stats) {});
+
+// Remove stucked processing jobs
+queue.cleanProcessingStuckJobs(function(err) {});
 ```
 
 #### Events

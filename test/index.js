@@ -15,17 +15,17 @@ describe('Workflow', function() {
   });
 
   afterEach(function removeQueue(done) {
-    queue.removeAllListeners();
+    queue.removeAllListeners(['stop', 'empty']);
     queue.remove(done);
   });
 
   it('should execute all jobs', function(done) {
     var executedJobs = [];
 
-    queue.on('empty', function() {
+    queue.once('empty', function() {
       executedJobs.should.have.lengthOf(3);
       executedJobs.should.eql(['test-1', 'test-2', 'test-3']);
-      queue.remove(done);
+      done();
     });
 
     queue.setWorker(function(job, cb) {
@@ -33,7 +33,7 @@ describe('Workflow', function() {
       return cb();
     });
 
-    queue.on('error', done);
+    queue.once('error', done);
 
     async.waterfall([
       function addJobs(cb) {
@@ -61,9 +61,9 @@ describe('Workflow', function() {
       it('should execute ' + nbJobs + ' jobs with concurrency = ' + concurrency, function(done) {
         var executedJobs = [];
 
-        queue.on('empty', function() {
+        queue.once('empty', function() {
           executedJobs.should.have.lengthOf(nbJobs);
-          queue.remove(done);
+          done();
         });
 
         queue.setWorker(function(job, cb) {
@@ -71,7 +71,7 @@ describe('Workflow', function() {
           return cb();
         });
 
-        queue.on('error', done);
+        queue.once('error', done);
 
         async.waterfall([
           function addJobs(cb) {
@@ -112,10 +112,10 @@ describe('Workflow', function() {
 
       var executedJobs = [];
 
-      queue.on('empty', function() {
+      queue.once('empty', function() {
         executedJobs.should.have.lengthOf(jobs.length);
         executedJobs.should.eql(expectedJobs);
-        queue.remove(done);
+        done();
       });
 
       queue.setWorker(function(job, cb) {
@@ -123,7 +123,7 @@ describe('Workflow', function() {
         return cb();
       });
 
-      queue.on('error', done);
+      queue.once('error', done);
 
       async.waterfall([
         function addJobs(cb) {
@@ -149,10 +149,10 @@ describe('Workflow', function() {
     it('should execute all jobs unexpired', function(done) {
       var executedJobs = [];
 
-      queue.on('empty', function() {
+      queue.once('empty', function() {
         executedJobs.should.have.lengthOf(3);
         executedJobs.should.eql(['test-1', 'test-2', 'test-3']);
-        queue.remove(done);
+        done();
       });
 
       queue.setWorker(function(job, cb) {
@@ -160,7 +160,7 @@ describe('Workflow', function() {
         return cb();
       });
 
-      queue.on('error', done);
+      queue.once('error', done);
 
       async.waterfall([
         function addJobs(cb) {

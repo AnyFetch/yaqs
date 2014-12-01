@@ -5,6 +5,8 @@
 var url = require('url');
 var redis = require('redis');
 var program = require('commander');
+var async = require('async');
+var rarity = require('rarity');
 
 program
   .version('0.0.1')
@@ -41,6 +43,18 @@ program.Command.prototype.action = function(fn) {
   originalAction.apply(this, [newFunction]);
 };
 
+function getQueues(prefix, cb) {
+  client.keys(prefix ? prefix + ':*:pending' : '*:*:pending', function(err, keys) {
+    if(err) {
+      return cb(err);
+    }
+
+    cb(null, keys.map(function(key) {
+      return {prefix: key.split(':')[0], name: key.split(':')[1]};
+    }));
+  });
+}
+
 program
   .command('flush <prefix> [names...]')
   .description('Flush specified queues')
@@ -69,17 +83,106 @@ program
 program
   .command('list [prefix]')
   .description('List queues')
-  .action(function list(prefix, names, cb) {
-    console.log("TO-DO: List queues");
-    cb();
+  .action(function list(prefix, cb) {
+    async.waterfall([
+      function retrieveQueues(cb) {
+        getQueues(prefix, cb);
+      },
+      function mergeQueuesByPrefix(queues, cb) {
+        var prefix = {};
+
+        queues.forEach(function(queue) {
+          if(!prefix[queue.prefix]) {
+            prefix[queue.prefix] = [];
+          }
+
+          prefix[queue.prefix].push(queue.name);
+        });
+
+        cb(null, prefix);
+      },
+      function display(prefix, cb) {
+        Object.keys(prefix).forEach(function(name) {
+          console.log(name);
+          prefix[name].forEach(function(queue, index) {
+            console.log("", (prefix[name].length - 1 === index ? '└' : '├') + "─", queue);
+          });
+        });
+
+        cb();
+      }
+    ], cb);
   });
 
 program
-  .command('stats [prefix] [name]')
+  .command('stats [prefix] [names...]')
   .description('Get stats of specified queues')
   .action(function stats(prefix, names, cb) {
-    console.log("TO-DO: Display stats");
-    cb();
+    async.waterfall([
+      function retrieveQueues(cb) {
+        if(names.length > 0) {
+          return cb(null, names.map(function(name) {
+            return {prefix: prefix, name: name};
+          }));
+        }
+
+        getQueues(prefix, cb);
+      },
+      function retrieveStats(queues, cb) {
+        var conn = client.multi();
+
+        queues.forEach(function(queue) {
+          var prefix = queue.prefix + ':' + queue.name;
+          conn = conn
+            .zrange(prefix + ':pending', 0, -1)
+            .zrange(prefix + ':processing', 0, -1)
+            .hget(prefix, 'total');
+        });
+
+        conn.exec(rarity.carry([queues], cb));
+      },
+      function addStatsToQueues(queues, replies, cb) {
+        for(var i = 0; i < replies.length; i += 3) {
+          queues[i / 3].stats = {
+            pending: replies[i].length,
+            processing: replies[i + 1].length,
+            total: replies[i + 2] ? parseInt(replies[i + 2]) : 0
+          };
+        }
+
+        cb(null, queues);
+      },
+      function mergeQueuesByPrefix(queues, cb) {
+        var prefix = {};
+
+        queues.forEach(function(queue) {
+          if(!prefix[queue.prefix]) {
+            prefix[queue.prefix] = [];
+          }
+
+          prefix[queue.prefix].push({
+            name: queue.name,
+            stats: queue.stats
+          });
+        });
+
+        cb(null, prefix);
+      },
+      function display(prefix, cb) {
+        Object.keys(prefix).forEach(function(name) {
+          console.log(name);
+          prefix[name].forEach(function(queue, index) {
+            var isLast = prefix[name].length - 1 === index;
+            console.log("", (isLast ? '└' : '├') + "─", queue.name);
+            console.log((isLast ? "   " : " │ "), '├' + "─", 'pending', '->', queue.stats.pending);
+            console.log((isLast ? "   " : " │ "), '├' + "─", 'processing', '->', queue.stats.processing);
+            console.log((isLast ? "   " : " │ "), '└' + "─", 'total', '->', queue.stats.total);
+          });
+        });
+
+        cb();
+      }
+    ], cb);
   });
 
 program.parse(process.argv);

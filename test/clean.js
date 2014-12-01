@@ -14,7 +14,6 @@ describe('Clean', function() {
   });
 
   afterEach(function removeQueue(done) {
-    queue.removeAllListeners();
     queue.remove(done);
   });
 

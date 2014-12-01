@@ -19,7 +19,7 @@ describe('Stats', function() {
     });
 
     afterEach(function removeQueue(done) {
-      queue.removeAllListeners();
+      queue.removeAllListeners(['error', 'empty']);
       queue.remove(done);
     });
 
@@ -51,9 +51,7 @@ describe('Stats', function() {
           }, cb);
         },
         function startQueue(cb) {
-          queue.on('error', function(err) {
-            cb(err);
-          });
+          queue.once('error', cb);
 
           var originalCb = cb;
           queue.setWorker(function(job, cb) {
@@ -149,9 +147,7 @@ describe('Stats', function() {
         },
         function startQueues(cb) {
           async.each(Object.keys(queues), function(name, cb) {
-            queues[name].on('error', function(err) {
-              cb(err);
-            });
+            queues[name].once('error', cb);
 
             var originalCb = cb;
             queues[name].setWorker(function(job, cb) {

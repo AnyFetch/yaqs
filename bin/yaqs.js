@@ -57,10 +57,42 @@ function getQueues(prefix, cb) {
 
 program
   .command('flush <prefix> [names...]')
-  .description('Flush specified queues')
+  .description('Flush pending jobs from specified queues')
   .action(function flush(prefix, names, cb) {
-    console.log("TO-DO: Flush redis queues");
-    cb();
+    async.waterfall([
+      function retrieveQueues(cb) {
+        if(names.length > 0) {
+          return cb(null, names.map(function(name) {
+            return {prefix: prefix, name: name};
+          }));
+        }
+
+        getQueues(prefix, cb);
+      },
+      function retrieveAndRemovePendingJobs(queues, cb) {
+        var conn = client.multi();
+
+        queues.forEach(function(queue) {
+          var prefix = queue.prefix + ':' + queue.name;
+          conn = conn
+            .zrange(prefix + ':pending', 0, -1)
+            .del(prefix + ':pending');
+        });
+
+        conn.exec(rarity.carry([queues], cb));
+      },
+      function removeJobDatas(queues, replies, cb) {
+        var conn = client.multi();
+
+        for(var i = 0; i < replies.length; i += 2) {
+          replies[i].forEach(function(jobId) {
+            conn = conn.del(queues[i / 2].prefix + ':' + queues[i / 2].name + ':jobs:' + parseInt(jobId));
+          });
+        }
+
+        conn.exec(rarity.slice(1, cb));
+      }
+    ], cb);
   });
 
 program
@@ -101,7 +133,7 @@ program
 
         cb(null, prefix);
       },
-      function display(prefix, cb) {
+      function displayList(prefix, cb) {
         Object.keys(prefix).forEach(function(name) {
           console.log(name);
           prefix[name].forEach(function(queue, index) {
@@ -168,7 +200,7 @@ program
 
         cb(null, prefix);
       },
-      function display(prefix, cb) {
+      function displayStats(prefix, cb) {
         Object.keys(prefix).forEach(function(name) {
           console.log(name);
           prefix[name].forEach(function(queue, index) {

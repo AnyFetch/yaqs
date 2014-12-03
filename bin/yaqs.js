@@ -44,15 +44,42 @@ program.Command.prototype.action = function(fn) {
 };
 
 function getQueues(prefix, cb) {
-  client.keys(prefix ? prefix + ':*:pending' : '*:*:pending', function(err, keys) {
+  client.keys(prefix ? prefix + ':*' : '*:*', function(err, keys) {
     if(err) {
       return cb(err);
     }
+
+    keys = keys.filter(function(key) {
+      return key.split(':').length === 2;
+    });
 
     cb(null, keys.map(function(key) {
       return {prefix: key.split(':')[0], name: key.split(':')[1]};
     }));
   });
+}
+
+function emitRemoveEvent(prefix, names, event, cb) {
+  async.waterfall([
+    function retrieveQueues(cb) {
+      if(names.length > 0) {
+        return cb(null, names.map(function(name) {
+          return {prefix: prefix, name: name};
+        }));
+      }
+
+      getQueues(prefix, cb);
+    },
+    function retrieveStats(queues, cb) {
+      var conn = client.multi();
+
+      queues.forEach(function(queue) {
+        conn = conn.publish(queue.prefix + ':' + queue.name, event);
+      });
+
+      conn.exec(cb);
+    },
+  ], cb);
 }
 
 program
@@ -99,16 +126,14 @@ program
   .command('start <prefix> [names...]')
   .description('Start specified queues')
   .action(function start(prefix, names, cb) {
-    console.log("TO-DO: Send start event to queues");
-    cb();
+    emitRemoveEvent(prefix, names, 'start', cb);
   });
 
 program
   .command('stop <prefix> [names...]')
   .description('Stop specified queues')
   .action(function stop(prefix, names, cb) {
-    console.log("TO-DO: Send stop event to queues");
-    cb();
+    emitRemoveEvent(prefix, names, 'stop', cb);
   });
 
 

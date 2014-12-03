@@ -7,6 +7,9 @@
     "test": "NODE_ENV=test mocha --recursive -R spec test/ -t 5000",
     "lint": "jshint lib/ test/ && jscs lib/ test/"
   },
+  "bin": {
+    "yaqs": "./bin/yaqs.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/AnyFetch/yaqs.git"

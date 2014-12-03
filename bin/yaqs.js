@@ -10,7 +10,8 @@ var rarity = require('rarity');
 
 program
   .version('0.0.1')
-  .option('-r, --redis <url>', 'Redis URL');
+  .option('-r, --redis <url>', 'Redis URL')
+  .option('-f, --force', 'Force removing of all datas with flush command');
 
 var client;
 
@@ -96,28 +97,62 @@ program
 
         getQueues(prefix, cb);
       },
-      function retrieveAndRemovePendingJobs(queues, cb) {
-        var conn = client.multi();
+      function flushDatas(queues, cb) {
+        if(program.force) {
+          async.waterfall([
+            function retrieveKeys(cb) {
+              var conn = client.multi();
 
-        queues.forEach(function(queue) {
-          var prefix = queue.prefix + ':' + queue.name;
-          conn = conn
-            .zrange(prefix + ':pending', 0, -1)
-            .del(prefix + ':pending');
-        });
+              queues.forEach(function(queue) {
+                conn = conn.keys(queue.prefix + ':' + queue.name + '*');
+              });
 
-        conn.exec(rarity.carry([queues], cb));
-      },
-      function removeJobDatas(queues, replies, cb) {
-        var conn = client.multi();
+              conn.exec(cb);
+            },
+            function removeKeys(replies, cb) {
+              var keys = [];
 
-        for(var i = 0; i < replies.length; i += 2) {
-          replies[i].forEach(function(jobId) {
-            conn = conn.del(queues[i / 2].prefix + ':' + queues[i / 2].name + ':jobs:' + parseInt(jobId));
-          });
+              replies.forEach(function(reply) {
+                keys = keys.concat(reply);
+              });
+
+              var conn = client.multi();
+
+              keys.forEach(function(key) {
+                conn = conn.del(key);
+              });
+
+              conn.exec(cb);
+            }
+          ], cb);
         }
+        else {
+          async.waterfall([
+            function retrieveAndRemovePendingJobs(cb) {
+              var conn = client.multi();
 
-        conn.exec(rarity.slice(1, cb));
+              queues.forEach(function(queue) {
+                var prefix = queue.prefix + ':' + queue.name;
+                conn = conn
+                  .zrange(prefix + ':pending', 0, -1)
+                  .del(prefix + ':pending');
+              });
+
+              conn.exec(cb);
+            },
+            function removeJobDatas(replies, cb) {
+              var conn = client.multi();
+
+              for(var i = 0; i < replies.length; i += 2) {
+                replies[i].forEach(function(jobId) {
+                  conn = conn.del(queues[i / 2].prefix + ':' + queues[i / 2].name + ':jobs:' + parseInt(jobId));
+                });
+              }
+
+              conn.exec(rarity.slice(1, cb));
+            }
+          ], cb);
+        }
       }
     ], cb);
   });

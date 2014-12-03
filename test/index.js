@@ -54,6 +54,44 @@ describe('Workflow', function() {
     });
   });
 
+  it('should execute all jobs after starting', function(done) {
+    var executedJobs = [];
+
+    queue.on('empty', function() {
+      if(executedJobs.length === 3) {
+        executedJobs.should.eql(['test-1', 'test-2', 'test-3']);
+        done();
+      }
+    });
+
+    queue.setWorker(function(job, cb) {
+      executedJobs.push(job.data.identifier);
+      return cb();
+    });
+
+    queue.once('error', done);
+
+    async.waterfall([
+      function startQueue(cb) {
+        queue.should.have.property('state', Queue.STOPPED);
+        queue.start(cb);
+      },
+      function addJobs(cb) {
+        setTimeout(function() {
+          async.eachSeries(['test-1', 'test-2', 'test-3'], function(identifier, cb) {
+            queue.createJob({identifier: identifier}).save(cb);
+          }, cb);
+        }, 200);
+      },
+    ], function(err) {
+      if(err) {
+        return done(err);
+      }
+
+      queue.should.have.property('state', Queue.STARTED);
+    });
+  });
+
   describe('Concurrency', function() {
     [1, 5, 10].forEach(function(concurrency) {
       var nbJobs = concurrency * 10;

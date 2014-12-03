@@ -54,41 +54,80 @@ describe('Workflow', function() {
     });
   });
 
-  it('should execute all jobs after starting', function(done) {
-    var executedJobs = [];
+  describe('Remote', function() {
+    it('enqueue should work', function(done) {
+      var executedJobs = [];
 
-    queue.on('empty', function() {
-      if(executedJobs.length === 3) {
-        executedJobs.should.eql(['test-1', 'test-2', 'test-3']);
+      queue.on('empty', function() {
+        if(executedJobs.length === 3) {
+          executedJobs.should.eql(['test-1', 'test-2', 'test-3']);
+          done();
+        }
+      });
+
+      queue.setWorker(function(job, cb) {
+        executedJobs.push(job.data.identifier);
+        return cb();
+      });
+
+      queue.once('error', done);
+
+      async.waterfall([
+        function startQueue(cb) {
+          queue.should.have.property('state', Queue.STOPPED);
+          queue.start(cb);
+        },
+        function addJobs(cb) {
+          setTimeout(function() {
+            async.eachSeries(['test-1', 'test-2', 'test-3'], function(identifier, cb) {
+              queue.createJob({identifier: identifier}).save(cb);
+            }, cb);
+          }, 20);
+        },
+      ], function(err) {
+        if(err) {
+          return done(err);
+        }
+
+        queue.should.have.property('state', Queue.STARTED);
+      });
+    });
+
+    it('start should work', function(done) {
+      queue.once('start', function() {
+        queue.should.have.property('state', Queue.STARTED);
         done();
-      }
+      });
+
+      queue.once('error', done);
+
+      client.getConn('pconn').publish(queue.getPrefix(), 'start', function(err) {
+        if(err) {
+          return done(err);
+        }
+      });
     });
 
-    queue.setWorker(function(job, cb) {
-      executedJobs.push(job.data.identifier);
-      return cb();
-    });
-
-    queue.once('error', done);
-
-    async.waterfall([
-      function startQueue(cb) {
+    it('stop should work', function(done) {
+      queue.once('stop', function() {
         queue.should.have.property('state', Queue.STOPPED);
-        queue.start(cb);
-      },
-      function addJobs(cb) {
-        setTimeout(function() {
-          async.eachSeries(['test-1', 'test-2', 'test-3'], function(identifier, cb) {
-            queue.createJob({identifier: identifier}).save(cb);
-          }, cb);
-        }, 200);
-      },
-    ], function(err) {
-      if(err) {
-        return done(err);
-      }
+        done();
+      });
 
-      queue.should.have.property('state', Queue.STARTED);
+      queue.once('error', done);
+
+      async.waterfall([
+        function startQueue(cb) {
+          queue.start(cb);
+        },
+        function sendStop(cb) {
+          client.getConn('pconn').publish(queue.getPrefix(), 'stop', cb);
+        }
+      ], function(err) {
+        if(err) {
+          return done(err);
+        }
+      });
     });
   });
 

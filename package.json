@@ -1,6 +1,6 @@
 {
   "name": "yaqs",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Yet Another Queue System",
   "main": "lib/index.js",
   "scripts": {

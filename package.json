@@ -26,7 +26,7 @@
     "redis": "^0.12.1"
   },
   "optionalDependencies": {
-    "hiredis": "^0.1.17"
+    "hiredis": "^0.2.0"
   },
   "devDependencies": {
     "mocha": "2.0.x",

@@ -41,7 +41,14 @@ describe('Workflow', function() {
           queue.createJob({identifier: identifier}).save(cb);
         }, cb);
       },
-      function startQueue(cb) {
+      function listQueues(cb) {
+        client.listQueues(null, cb);
+      },
+      function startQueue(queues, cb) {
+        queues.should.have.lengthOf(1);
+        queues[0].should.have.property('prefix', 'yaqs');
+        queues[0].should.have.property('name', 'test');
+
         queue.should.have.property('state', Queue.STOPPED);
         queue.start(cb);
       }
